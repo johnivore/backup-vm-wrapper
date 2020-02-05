@@ -34,8 +34,8 @@ def run_or_not(command, dry_run):
         return
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if result.returncode != 0:
-        print(result.stdout)
-        print(result.stderr)
+        print(stdout.decode().strip())
+        print(stderr.decode().strip())
         sys.exit(1)
 
 
@@ -65,8 +65,8 @@ def main():
     command = ['virsh', 'list', '--all', '--name']
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if result.returncode != 0:
-        print(result.stdout)
-        print(result.stderr)
+        print(stdout.decode().strip())
+        print(stderr.decode().strip())
         sys.exit(1)
     domain_list = result.stdout.decode().strip().split('\n')
 
