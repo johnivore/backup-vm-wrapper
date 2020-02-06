@@ -80,9 +80,9 @@ def main():
         borg_destination = str(domain_repo) + '::' + domain + '-{now:%Y-%m-%d}'
         if config.has_section('disks') and config.has_option('disks', domain):
             disks = config['disks'][domain].strip()
-            command = ['backup-vm', domain, disks, borg_destination]
+            command = ['/usr/local/bin/backup-vm', domain, disks, borg_destination]
         else:
-            command = ['backup-vm', domain, borg_destination]
+            command = ['/usr/local/bin/backup-vm', domain, borg_destination]
         run_or_not(command, args.dry_run)
         # prune
         command = ['borg', 'prune', '--keep-daily', '7', '--keep-weekly', '8', str(domain_repo)]
