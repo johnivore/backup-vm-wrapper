@@ -24,6 +24,7 @@ from pathlib import Path
 import argparse
 import configparser
 import subprocess
+import requests
 
 
 # -------------------------------------------------
@@ -37,6 +38,19 @@ def run_or_not(command, dry_run):
         print(result.stdout.decode().strip())
         print(result.stderr.decode().strip())
         sys.exit(1)
+
+
+def healthchecks_ping(url: str):
+    try:
+        requests.get("https://hc.sideviewlabs.com/ping/your-uuid-here", timeout=10)
+    except requests.RequestException as e:
+        print('Ping failed: %s' % e)
+
+
+def exit_with_error(healthchecks_url: str):
+    if healthchecks_url:
+        healthchecks_ping(healthchecks_url + ' /fail')
+    sys.exit(1)
 
 
 def main():
@@ -57,18 +71,24 @@ def main():
         sys.exit(1)
     config.read(config_file)
 
+    healthchecks_url = config.get('main', 'healthchecks_url', fallback='')
+
     borg_path = Path(config['main']['borg_path'])
     if not borg_path.is_dir():
         print(f'** Borg path ({borg_path}) not found')
-        sys.exit(1)
+        exit_with_error(healthchecks_url)
 
     command = ['virsh', 'list', '--all', '--name']
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if result.returncode != 0:
         print(result.stdout.decode().strip())
         print(result.stderr.decode().strip())
-        sys.exit(1)
+        exit_with_error(healthchecks_url)
     domain_list = result.stdout.decode().strip().split('\n')
+
+    if healthchecks_url:
+        # ping healthchecks we've started the backup job
+        healthchecks_ping(healthchecks_url + ' /start')
 
     for domain in domain_list:
         # create borg repo if needed
@@ -87,6 +107,10 @@ def main():
         # prune
         command = ['borg', 'prune', '--keep-daily', '7', '--keep-weekly', '8', str(domain_repo)]
         run_or_not(command, args.dry_run)
+
+    if healthchecks_url:
+        # ping healthchecks we've finished the backup job
+        healthchecks_ping(healthchecks_url)
 
 
 if __name__ == '__main__':

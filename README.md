@@ -29,6 +29,12 @@ It will:
 
         backup-vm-wrapper.py -c /path/to/config
 
+### Healthchecks integration
+
+In the `[main]` config section, add the healtchecks URL:
+
+    healthchecks_url = https://healthchecks.example.com/ping/1348a1f38-c4c1-409a-a0f2-784d1001903b
+
 
 ## License
 
