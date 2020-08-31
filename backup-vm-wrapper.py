@@ -91,7 +91,7 @@ def main():
 
     if healthchecks_url:
         # ping healthchecks we've started the backup job
-        healthchecks_ping(healthchecks_url + ' /start', args.dry_run)
+        healthchecks_ping(healthchecks_url + '/start', args.dry_run)
 
     for domain in domain_list:
         # create borg repo if needed
