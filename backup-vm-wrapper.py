@@ -45,7 +45,7 @@ def healthchecks_ping(url: str, dry_run: bool):
         print('Would ping: %s' % url)
         return
     try:
-        requests.get("https://hc.sideviewlabs.com/ping/your-uuid-here", timeout=10)
+        requests.get(url, timeout=10)
     except requests.RequestException as e:
         print('Ping failed: %s' % e)
 
