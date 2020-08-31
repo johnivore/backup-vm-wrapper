@@ -40,16 +40,19 @@ def run_or_not(command, dry_run):
         sys.exit(1)
 
 
-def healthchecks_ping(url: str):
+def healthchecks_ping(url: str, dry_run: bool):
+    if dry_run:
+        print('Would ping: %s' % url)
+        return
     try:
         requests.get("https://hc.sideviewlabs.com/ping/your-uuid-here", timeout=10)
     except requests.RequestException as e:
         print('Ping failed: %s' % e)
 
 
-def exit_with_error(healthchecks_url: str):
+def exit_with_error(healthchecks_url: str, dry_run: bool):
     if healthchecks_url:
-        healthchecks_ping(healthchecks_url + ' /fail')
+        healthchecks_ping(healthchecks_url + ' /fail', dry_run)
     sys.exit(1)
 
 
@@ -76,19 +79,19 @@ def main():
     borg_path = Path(config['main']['borg_path'])
     if not borg_path.is_dir():
         print(f'** Borg path ({borg_path}) not found')
-        exit_with_error(healthchecks_url)
+        exit_with_error(healthchecks_url, args.dry_run)
 
     command = ['virsh', 'list', '--all', '--name']
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if result.returncode != 0:
         print(result.stdout.decode().strip())
         print(result.stderr.decode().strip())
-        exit_with_error(healthchecks_url)
+        exit_with_error(healthchecks_url, args.dry_run)
     domain_list = result.stdout.decode().strip().split('\n')
 
     if healthchecks_url:
         # ping healthchecks we've started the backup job
-        healthchecks_ping(healthchecks_url + ' /start')
+        healthchecks_ping(healthchecks_url + ' /start', args.dry_run)
 
     for domain in domain_list:
         # create borg repo if needed
@@ -110,7 +113,7 @@ def main():
 
     if healthchecks_url:
         # ping healthchecks we've finished the backup job
-        healthchecks_ping(healthchecks_url)
+        healthchecks_ping(healthchecks_url, args.dry_run)
 
 
 if __name__ == '__main__':
